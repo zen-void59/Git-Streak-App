@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # gitstreak_app
 
 A new Flutter project.
@@ -15,3 +16,7 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+# Git-Streak-App
+This is my  Git Streak  App , it is an educational purpose application build for Coders &amp; Developers to know there Statistics on Github. 
+>>>>>>> 778a219ac42c79b659d4f7159bc21e59336c64fa
