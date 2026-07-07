@@ -135,6 +135,13 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 ElevatedButton(
                   onPressed: () {},
+                   style: ElevatedButton.styleFrom(
+                   // backgroundColor: const Color.fromARGB(156, 57, 55, 55),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: const BorderSide(color: Color.fromARGB(255, 78, 101, 78), width: 0.7),
+                    ),
+                  ),
                   child: const Text(
                     'How it Works?',
                     style: TextStyle(
@@ -146,6 +153,13 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(width: 50),
                 ElevatedButton(
                   onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    //backgroundColor: const Color.fromARGB(156, 57, 55, 55),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: const BorderSide(color: Color.fromARGB(255, 78, 101, 78), width: 0.7),
+                    ),
+                  ),
                   child: const Text(
                     'Privacy Policy',
                     style: TextStyle(
