@@ -61,22 +61,34 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              width: 375,
-              child: ElevatedButton(
-                onPressed: () {
-              
-                },
-                 child: const Text('Connect ➜'),
-                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 88, 233, 93),
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                boxShadow:[
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.5),
+                    blurRadius: 20,
+                    spreadRadius: 2,
                   ),
-                              ),
+                ],
+              ),
+              child: SizedBox(
+                width: 375,
+                child: ElevatedButton(
+                  onPressed: () {
+                
+                  },
+                   child: const Text('Connect ➜'),
+                   style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 88, 233, 93),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                                ),
+                ),
               ),
             ),
           ],
