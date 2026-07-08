@@ -123,53 +123,78 @@ class _LoginPageState extends State<LoginPage> {
               onPressed: () {},
               child: const Text(
                 'HELPFUL LINKS',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
             ),
             const SizedBox(height: 10),
-           Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
+                ElevatedButton.icon(
                   onPressed: () {},
-                   style: ElevatedButton.styleFrom(
-                   // backgroundColor: const Color.fromARGB(156, 57, 55, 55),
+                  icon: const Icon(
+                    Icons.help_outline,
+                    color: Colors.grey,
+                    size: 20,
+                  ),
+                  label: const Text(
+                    'How it Works?',
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                  style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(color: Color.fromARGB(255, 78, 101, 78), width: 0.7),
-                    ),
-                  ),
-                  child: const Text(
-                    'How it Works?',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 16,
+                      side: const BorderSide(
+                        color: Color.fromARGB(255, 78, 101, 78),
+                        width: 0.7,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 50),
-                ElevatedButton(
+                const SizedBox(width: 27.5),
+                ElevatedButton.icon(
                   onPressed: () {},
+                  icon: const Icon(
+                    Icons.privacy_tip_outlined,
+                    color: Colors.grey,
+                    size: 20,
+                  ),
+                  label: const Text(
+                    'Privacy Policy',
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
                   style: ElevatedButton.styleFrom(
-                    //backgroundColor: const Color.fromARGB(156, 57, 55, 55),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(color: Color.fromARGB(255, 78, 101, 78), width: 0.7),
-                    ),
-                  ),
-                  child: const Text(
-                    'Privacy Policy',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 16,
+                      side: const BorderSide(
+                        color: Color.fromARGB(255, 78, 101, 78),
+                        width: 0.7,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 15),
+            // Padding(
+            //   padding: const EdgeInsets.all(16.0),
+            //   child: Container(
+            //     padding: const EdgeInsets.all(16),
+            //     decoration: BoxDecoration(
+            //       borderRadius: BorderRadius.circular(10),
+            //       border: Border.all(
+            //         color: const Color.fromARGB(255, 78, 101, 78),
+            //         width: 0.7,
+            //       ),
+            //       // color: const Color.fromARGB(156, 57, 55, 55),
+            //     ),
+            //     child: Text(
+            //       'Your last 365 days of activity will be analyzed to build your unique developer momentum profile.',
+            //       style: TextStyle(color: Colors.grey, fontSize: 16),
+            //     ),
+            //   ),
+            // ),
+            Text('Version 1.0.0', style: TextStyle(color: const Color.fromARGB(116, 158, 158, 158), fontSize: 14)),
           ],
         ),
       ),
