@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gitstreak_app/dashboard_page.dart';
 import 'package:gitstreak_app/login_page.dart';
 
 void main() {
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
       title: 'Git Streak',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3:true),
-      home: const LoginPage(),
+      home: const DashboardPage(),
     );
   }
 }
