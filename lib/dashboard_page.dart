@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-
+import "package:gitstreak_app/navigation_bar.dart" as app_nav;
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -194,10 +194,12 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
 
+
             ],
           ),
         ),
       ),
+      bottomNavigationBar: const app_nav.CustomNavigationBar(),
     );
   }
 }
