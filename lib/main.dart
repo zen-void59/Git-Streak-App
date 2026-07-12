@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gitstreak_app/dashboard_page.dart';
 import 'package:gitstreak_app/login_page.dart';
+import 'package:gitstreak_app/habits_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
       title: 'Git Streak',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3:true),
-      home: const DashboardPage(),
+      home: const HabitsPage(),
     );
   }
 }
