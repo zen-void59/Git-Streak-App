@@ -199,7 +199,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
       ),
-      bottomNavigationBar: const app_nav.CustomNavigationBar(),
+      bottomNavigationBar: const app_nav.CustomNavigationBar(currentIndex: 0,),
     );
   }
 }

@@ -1,4 +1,6 @@
 import "package:flutter/material.dart";
+import "package:gitstreak_app/navigation_bar.dart" as app_nav;
+
 
 class HabitsPage extends StatefulWidget {
   const HabitsPage({super.key});
@@ -263,6 +265,9 @@ class _HabitsPageState extends State<HabitsPage> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: const app_nav.CustomNavigationBar(
+        currentIndex:1,
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green,
