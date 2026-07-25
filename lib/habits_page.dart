@@ -160,6 +160,7 @@ class _HabitsPageState extends State<HabitsPage> {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 20),
                       SizedBox(
                         width: 165,
                         height: 120,
