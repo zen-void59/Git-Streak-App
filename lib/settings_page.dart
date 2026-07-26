@@ -256,6 +256,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
+
+              const SizedBox(height:20 ),
+              Text('Appearance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
             ],
           ),
         ),
