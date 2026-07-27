@@ -271,7 +271,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   child: Row(
                     children: [
-                      
+                      const CircleAvatar(
+                        radius:25,
+                        backgroundColor: Colors.transparent,
+                        child:  Icon(Icons.exit_to_app,fontWeight: FontWeight.bold,color: Colors.red, ),
+                      )
                     ],
 
                   ),
