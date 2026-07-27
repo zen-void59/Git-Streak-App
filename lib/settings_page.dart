@@ -258,7 +258,26 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
 
               const SizedBox(height:20 ),
-              Text('Appearance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+              SizedBox(
+                height: 90,
+                width: 400,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.red.shade400,
+                      width: 1.5,
+                    )
+                  ),
+                  child: Row(
+                    children: [
+                      
+                    ],
+
+                  ),
+                ),
+
+              )
             ],
           ),
         ),
