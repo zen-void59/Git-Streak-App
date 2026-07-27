@@ -28,10 +28,10 @@ class CustomNavigationBar extends StatelessWidget {
           icon: Icon(Icons.check_circle),
           label: 'Habits',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Stats',
-        ),
+        // BottomNavigationBarItem(
+        //   icon: Icon(Icons.person),
+        //   label: 'Stats',
+        // ),
         BottomNavigationBarItem(
           icon: Icon(Icons.settings),
           label: 'Settings',

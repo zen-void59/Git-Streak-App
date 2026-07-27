@@ -1,4 +1,4 @@
-import "dart:math";
+import "package:gitstreak_app/navigation_bar.dart" as app_nav;
 
 import "package:flutter/material.dart";
 
@@ -134,10 +134,13 @@ class _SettingsPageState extends State<SettingsPage> {
                           //forward Arrow
                           radius: 25,
                           backgroundColor: Colors.transparent,
-                          child: Icon(
-                            Icons.arrow_forward_ios,
-                            color: Color.fromARGB(255, 88, 233, 93),
-                            size: 30,
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.arrow_forward_ios,
+                              color: Color.fromARGB(255, 88, 233, 93),
+                            ),
+                            iconSize: 30,
+                            onPressed: () {},
                           ),
                         ),
                       ),
@@ -257,9 +260,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
 
-              const SizedBox(height:20 ),
+              const SizedBox(height:35 ),
               SizedBox(
-                height: 90,
+                height: 70,
                 width: 400,
                 child: Container(
                   decoration: BoxDecoration(
@@ -269,27 +272,41 @@ class _SettingsPageState extends State<SettingsPage> {
                       width: 1.5,
                     )
                   ),
-                  child: Row(
-                    children: [
-                      const CircleAvatar(
-                        radius:25,
-                        backgroundColor: Colors.transparent,
-                        child:  Icon(Icons.exit_to_app,fontWeight: FontWeight.bold,color: Colors.red, ),
-                      )
-                    ],
-
+                  child: Padding(
+                    padding: const EdgeInsets.only(left:60.0),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(
+                          radius:25,
+                          backgroundColor: Colors.transparent,
+                          child:  Icon(Icons.exit_to_app,fontWeight: FontWeight.bold,color: Colors.red, ),
+                        ),
+                       TextButton(onPressed: () {}, child: 
+                       Text("Disconnect Button",style: TextStyle(fontSize: 20,color: Colors.red))),
+                      ],
+                    
+                    ),
                   ),
                 ),
 
+              ),
+              const SizedBox(width: 0,height: 20,),
+              Container(
+                alignment: Alignment.center,
+                child: Text('GitStreak V1.0',style:TextStyle(
+                  fontSize: 14,
+                  color: Color.fromARGB(255, 89, 79, 79),
+                ) ,),
               )
             ],
           ),
         ),
       ),
+      bottomNavigationBar: const app_nav.CustomNavigationBar(
+        currentIndex:2,),
     );
   }
 }
-
 
 
 
