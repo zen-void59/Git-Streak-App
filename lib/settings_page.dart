@@ -1,7 +1,8 @@
-import "package:gitstreak_app/navigation_bar.dart" as app_nav;
+//import "package:gitstreak_app/navigation_bar.dart" as app_nav;
 
 import "package:flutter/material.dart";
-
+import "package:hive/hive.dart";
+import 'package:hive_flutter/hive_flutter.dart';
 class SettingsPage extends StatefulWidget {
   
   const SettingsPage({super.key});
@@ -13,6 +14,18 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool isReminderOn = false;
   TimeOfDay? selectedTime;
+  final TextEditingController githubController = TextEditingController();
+late Box settingsBox;
+
+@override
+void initState() {
+  super.initState();
+
+  settingsBox = Hive.box('settings');
+
+  githubController.text =
+      settingsBox.get('github_username', defaultValue: '');
+}
 
   Future<void> selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
@@ -302,8 +315,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
-      bottomNavigationBar: const app_nav.CustomNavigationBar(
-        currentIndex:2,),
+      // bottomNavigationBar: const app_nav.CustomNavigationBar(
+      //   currentIndex:2,),
     );
   }
 }

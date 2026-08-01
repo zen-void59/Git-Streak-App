@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:gitstreak_app/models/habit_model.dart';
 import "package:gitstreak_app/navigation_bar.dart" as app_nav;
-
 
 class HabitsPage extends StatefulWidget {
   const HabitsPage({super.key});
@@ -13,29 +14,24 @@ class _HabitsPageState extends State<HabitsPage> {
   bool isCompleted = false;
   final TextEditingController controller = TextEditingController();
 
-  List<Map<String, dynamic>> habits = [
-    {
-      "name": "Coding",
-      "days": 124,
-      "completed": true,
-      "selected": false,
-      "icon": Icons.computer,
-    },
-    {
-      "name": "Read 20 min",
-      "days": 14,
-      "completed": false,
-      "selected": false,
-      "icon": Icons.menu_book,
-    },
-    {
-      "name": "Workout",
-      "days": 42,
-      "completed": false,
-      "selected": false,
-      "icon": Icons.fitness_center,
-    },
-  ];
+  late Box<HabitModel> habitBox;
+
+  Set<int> selectedHabits = {};
+
+  @override
+  void initState() {
+    super.initState();
+
+    habitBox = Hive.box<HabitModel>('habits');
+
+    if (habitBox.isEmpty) {
+      habitBox.add(HabitModel(name: "Coding", days: 124, completed: true));
+
+      habitBox.add(HabitModel(name: "Read 20 min", days: 14, completed: false));
+
+      habitBox.add(HabitModel(name: "Workout", days: 42, completed: false));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +50,7 @@ class _HabitsPageState extends State<HabitsPage> {
             onPressed: () {},
             icon: Icon(Icons.notifications_outlined),
           ),
-          if (habits.any((habit) => habit["selected"] == true))
+          if (selectedHabits.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: deleteSelectedHabits,
@@ -208,56 +204,67 @@ class _HabitsPageState extends State<HabitsPage> {
               ),
               const SizedBox(height: 20),
               Expanded(
-                child: ListView.builder(
-                  itemCount: habits.length,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onLongPress: () {
-                        setState(() {
-                          habits[index]['selected'] =
-                              !habits[index]['selected'];
-                        });
+                child: ValueListenableBuilder(
+                  valueListenable: habitBox.listenable(),
+
+                  builder: (context, Box<HabitModel> box, _) {
+                    return ListView.builder(
+                      itemCount: box.length,
+
+                      itemBuilder: (context, index) {
+                        final habit = box.getAt(index)!;
+
+                        return GestureDetector(
+  onLongPress: () {
+    setState(() {
+      if (selectedHabits.contains(index)) {
+        selectedHabits.remove(index);
+      } else {
+        selectedHabits.add(index);
+      }
+    });
+  },
+
+  child: Container(
+    margin: const EdgeInsets.only(bottom: 15),
+    padding: const EdgeInsets.all(5),
+    decoration: BoxDecoration(
+      color: selectedHabits.contains(index)
+          ? Colors.green.withOpacity(0.2)
+          : const Color(0xff1D2128),
+      borderRadius: BorderRadius.circular(18),
+    ),
+
+    child: ListTile(
+      leading: const Icon(
+        Icons.task_alt,
+        color: Colors.green,
+      ),
+
+      title: Text(
+        habit.name,
+        style: const TextStyle(color: Colors.white),
+      ),
+
+      subtitle: Text(
+        "${habit.days} days",
+        style: const TextStyle(color: Colors.grey),
+      ),
+
+      trailing: GestureDetector(
+        onTap: () {
+          habit.completed = !habit.completed;
+          habit.save();
+        },
+        child: Icon(
+          Icons.check_circle,
+          color: habit.completed ? Colors.green : Colors.grey,
+        ),
+      ),
+    ),
+  ),
+);
                       },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 15),
-                        padding: const EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: habits[index]["selected"]
-                              ? Colors.green.withOpacity(0.2)
-                              : const Color(0xff1D2128),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: ListTile(
-                          leading: Icon(
-                            habits[index]["icon"],
-                            color: Colors.green,
-                          ),
-                          title: Text(
-                            habits[index]["name"],
-                            style: const TextStyle(color: Colors.white),
-                          ),
-
-                          subtitle: Text(
-                            "${habits[index]["days"]} days",
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-
-                          trailing: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                habits[index]["completed"] =
-                                    !habits[index]["completed"];
-                              });
-                            },
-                            child: Icon(
-                              Icons.check_circle,
-                              color: habits[index]["completed"]
-                                  ? Colors.green
-                                  : Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ),
                     );
                   },
                 ),
@@ -266,9 +273,9 @@ class _HabitsPageState extends State<HabitsPage> {
           ),
         ),
       ),
-      bottomNavigationBar: const app_nav.CustomNavigationBar(
-        currentIndex:1,
-      ),
+      // bottomNavigationBar: const app_nav.CustomNavigationBar(
+      //   currentIndex:1,
+      // ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green,
         onPressed: addHabit,
@@ -284,8 +291,14 @@ class _HabitsPageState extends State<HabitsPage> {
   }
 
   void deleteSelectedHabits() {
+    final indexes = selectedHabits.toList()..sort((a, b) => b.compareTo(a));
+
+    for (var index in indexes) {
+      habitBox.deleteAt(index);
+    }
+
     setState(() {
-      habits.removeWhere((habit) => habit["selected"] == true);
+      selectedHabits.clear();
     });
   }
 
@@ -310,15 +323,13 @@ class _HabitsPageState extends State<HabitsPage> {
                   return;
                 }
 
-                setState(() {
-                  habits.add({
-                    "name": controller.text,
-                    "days": 0,
-                    "completed": false,
-                    "selected": false,
-                    "icon": Icons.task_alt,
-                  });
-                });
+                habitBox.add(
+                  HabitModel(
+                    name: controller.text.trim(),
+                    days: 0,
+                    completed: false,
+                  ),
+                );
 
                 controller.clear();
                 Navigator.pop(context);
