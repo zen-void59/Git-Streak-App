@@ -16,6 +16,7 @@ if (!Hive.isAdapterRegistered(0)) {
   Hive.registerAdapter(HabitModelAdapter());
 }
   await Hive.openBox<HabitModel>('habits');
+  await Hive.openBox('settings');
 
 
   runApp(const MyApp());

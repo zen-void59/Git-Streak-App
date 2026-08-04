@@ -3,6 +3,7 @@ import 'package:gitstreak_app/services/github_service.dart';
 import 'package:gitstreak_app/models/github_user.dart';
 import 'package:gitstreak_app/models/github_repo.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:hive/hive.dart';
 
 //import "package:gitstreak_app/navigation_bar.dart" as app_nav;
 class DashboardPage extends StatefulWidget {
@@ -17,6 +18,8 @@ class _DashboardPageState extends State<DashboardPage> {
   GitHubUser? githubUser;
   bool isLoading = true;
   List<GitHubRepo> repositories = [];
+  GitHubUser? user;
+  bool isLoadingUser = true;
 
   @override
   void initState() {
@@ -25,38 +28,54 @@ class _DashboardPageState extends State<DashboardPage> {
     loadUser();
   }
 
-  Future<void> openRepository(String url) async {
-  final uri = Uri.parse(url);
 
-  if (!await launchUrl(
-    uri,
-    mode: LaunchMode.externalApplication,
-  )) {
-    throw Exception("Could not launch $url");
+  Future<void> openRepository(String url) async {
+    final uri = Uri.parse(url);
+
+    if (!await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw Exception("Could not launch $url");
+    }
   }
-}
 
   Future<void> loadUser() async {
-    final service = GitHubService();
+  final settingsBox = Hive.box('settings');
 
-    final user = await service.fetchUser("zen-void59");
+  final username = settingsBox.get(
+    'github_username',
+    defaultValue: 'zen-void59',
+  );
 
-    final repos = await service.fetchRepositories("zen-void59");
+  final service = GitHubService();
 
-    print("Total repos fetched: ${repos.length}");
+  final user = await service.fetchUser(username);
 
-for (final repo in repos) {
-  print(repo.name);
-}
+  final repos = await service.fetchRepositories(username);
 
-    setState(() {
-      githubUser = user;
-      repositories = repos;
-      isLoading = false;
-    });
+  print("Total repos fetched: ${repos.length}");
+
+  for (final repo in repos) {
+    print(repo.name);
   }
 
+  setState(() {
+    githubUser = user;
+    repositories = repos;
+    isLoading = false;
+  });
+}
+  @override
+
   Widget build(BuildContext context) {
+     if (isLoading) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -90,6 +109,89 @@ for (final repo in repos) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+
+                Card(
+  color: const Color(0xFF1B1F24),
+  child: Padding(
+    padding: const EdgeInsets.all(20),
+    child: Column(
+      children: [
+
+        CircleAvatar(
+          radius: 40,
+          backgroundImage: githubUser != null ? NetworkImage(githubUser!.avatarUrl) : null,
+          child: githubUser == null ? const Icon(Icons.person) : null,
+        ),
+
+        const SizedBox(height: 12),
+
+        Text(
+          githubUser?.login ?? 'User',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        Text(
+          "@${githubUser?.login ?? ''}",
+          style: const TextStyle(
+            color: Colors.grey,
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+
+            Column(
+              children: [
+                Text(
+                  "${githubUser?.publicRepos ?? 0}",
+                  style: const TextStyle(
+                      color: Colors.green,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                ),
+                const Text("Repositories"),
+              ],
+            ),
+
+            Column(
+              children: [
+                Text(
+                  "${githubUser?.followers ?? 0}",
+                  style: const TextStyle(
+                      color: Colors.green,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                ),
+                const Text("Followers"),
+              ],
+            ),
+
+            Column(
+              children: [
+                Text(
+                  "${githubUser?.following ?? 0}",
+                  style: const TextStyle(
+                      color: Colors.green,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                ),
+                const Text("Following"),
+              ],
+            ),
+          ],
+        )
+      ],
+    ),
+  ),
+),
+
                 Text(
                   isLoading
                       ? "Loading..."
