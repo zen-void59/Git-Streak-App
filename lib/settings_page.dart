@@ -88,10 +88,64 @@ void initState() {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Account',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Container(
+  padding: const EdgeInsets.all(16),
+  decoration: BoxDecoration(
+    borderRadius: BorderRadius.circular(10),
+    border: Border.all(
+      color: const Color.fromARGB(255, 78, 101, 78),
+      width: 1.5,
+    ),
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        "GitHub Username",
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+
+      const SizedBox(height: 15),
+
+      TextField(
+        controller: githubController,
+        decoration: InputDecoration(
+          hintText: "Enter GitHub Username",
+          prefixIcon: const Icon(Icons.person),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ),
+
+      const SizedBox(height: 15),
+
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+
+            settingsBox.put(
+              "github_username",
+              githubController.text.trim(),
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("GitHub username saved successfully"),
               ),
+            );
+          },
+
+          child: const Text("Save"),
+        ),
+      ),
+    ],
+  ),
+),
               const SizedBox(width: 0, height: 12),
               SizedBox(
                 width: 400,
