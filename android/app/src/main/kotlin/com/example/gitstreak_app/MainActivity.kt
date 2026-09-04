@@ -1,4 +1,4 @@
-package com.example.gitstreak_app
+package com.example.Moss_app
 
 import io.flutter.embedding.android.FlutterActivity
 

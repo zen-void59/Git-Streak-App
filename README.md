@@ -1,22 +1,30 @@
-<<<<<<< HEAD
-# gitstreak_app
+# Moss - Git Streak App
 
-A new Flutter project.
+A Flutter application for developers to track GitHub coding streaks, build daily habits, and gamify their developer journey.
+
+## Features
+
+- Track GitHub contribution streaks (current & longest)
+- 365-day contribution heatmap
+- Weekly & monthly commit analytics
+- Daily habit tracker with XP & leveling system
+- Achievement badges
+- Language usage pie chart
+- Daily coding reminders
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Ensure Flutter SDK `^3.12.1` is installed
+2. Run `flutter pub get`
+3. Run `flutter run`
 
-A few resources to get you started if this is your first Flutter project:
+## Tech Stack
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- **Flutter** - UI framework
+- **Hive** - Local database
+- **fl_chart** - Charts & graphs
+- **flutter_local_notifications** - Daily reminders
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-=======
-# Git-Streak-App
-This is my  Git Streak  App , it is an educational purpose application build for Coders &amp; Developers to know there Statistics on Github. 
->>>>>>> 778a219ac42c79b659d4f7159bc21e59336c64fa
+## License
+
+For educational purposes.

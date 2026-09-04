@@ -1,7 +1,11 @@
-import "package:flutter/material.dart";
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:gitstreak_app/models/habit_model.dart';
-import "package:gitstreak_app/navigation_bar.dart" as app_nav;
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/habits_provider.dart';
+import '../utils/constants.dart';
+import '../utils/xp_calculator.dart';
+import '../widgets/xp_progress_bar.dart';
+import '../widgets/badge_chip.dart';
+import '../widgets/empty_state.dart';
 
 class HabitsPage extends StatefulWidget {
   const HabitsPage({super.key});
@@ -11,334 +15,318 @@ class HabitsPage extends StatefulWidget {
 }
 
 class _HabitsPageState extends State<HabitsPage> {
-  bool isCompleted = false;
-  final TextEditingController controller = TextEditingController();
-
-  late Box<HabitModel> habitBox;
-
-  Set<int> selectedHabits = {};
+  final TextEditingController _controller = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-
-    habitBox = Hive.box<HabitModel>('habits');
-
-    if (habitBox.isEmpty) {
-      habitBox.add(HabitModel(name: "Coding", days: 124, completed: true));
-
-      habitBox.add(HabitModel(name: "Read 20 min", days: 14, completed: false));
-
-      habitBox.add(HabitModel(name: "Workout", days: 42, completed: false));
-    }
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Git Streak',
-          style: TextStyle(
-            color: Color.fromARGB(255, 88, 233, 93),
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+  void _addHabit() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Add Habit'),
+        content: TextField(
+          controller: _controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'e.g. Code for 1 hour',
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.notifications_outlined),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _controller.clear();
+            },
+            child: const Text('Cancel',
+                style: TextStyle(color: AppColors.textSecondary)),
           ),
-          if (selectedHabits.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: deleteSelectedHabits,
-            ),
+          ElevatedButton(
+            onPressed: () {
+              if (_controller.text.trim().isEmpty) return;
+              context.read<HabitsProvider>().addHabit(_controller.text);
+              _controller.clear();
+              Navigator.pop(ctx);
+            },
+            child: const Text('Add'),
+          ),
         ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 16, top: 10, right: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Daily Habits,',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 5),
-              const Text(
-                'Stay disciplined. Stay ahead.',
-                style: TextStyle(color: Colors.grey, fontSize: 20),
-              ),
-              const SizedBox(height: 20),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  child: Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 28, 34, 28),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color.fromARGB(255, 78, 101, 78),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Total Streak',
-                                style: TextStyle(
-                                  color: Colors.grey[300],
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                '129 ',
-                                style: TextStyle(
-                                  color: Colors.green[400],
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      //Completion Rate Card
-                      SizedBox(
-                        width: 165,
-                        height: 120,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 28, 34, 28),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: const Color.fromARGB(255, 78, 101, 78),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Completion',
-                                  style: TextStyle(
-                                    color: Colors.grey[300],
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  '67%',
-                                  style: TextStyle(
-                                    color: Colors.green[400],
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      SizedBox(
-                        width: 165,
-                        height: 120,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 28, 34, 28),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: const Color.fromARGB(255, 78, 101, 78),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'XP Earned',
-                                  style: TextStyle(
-                                    color: Colors.grey[300],
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  '10K ',
-                                  style: TextStyle(
-                                    color: Colors.green[400],
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: ValueListenableBuilder(
-                  valueListenable: habitBox.listenable(),
-
-                  builder: (context, Box<HabitModel> box, _) {
-                    return ListView.builder(
-                      itemCount: box.length,
-
-                      itemBuilder: (context, index) {
-                        final habit = box.getAt(index)!;
-
-                        return GestureDetector(
-  onLongPress: () {
-    setState(() {
-      if (selectedHabits.contains(index)) {
-        selectedHabits.remove(index);
-      } else {
-        selectedHabits.add(index);
-      }
-    });
-  },
-
-  child: Container(
-    margin: const EdgeInsets.only(bottom: 15),
-    padding: const EdgeInsets.all(5),
-    decoration: BoxDecoration(
-      color: selectedHabits.contains(index)
-          ? Colors.green.withOpacity(0.2)
-          : const Color(0xff1D2128),
-      borderRadius: BorderRadius.circular(18),
-    ),
-
-    child: ListTile(
-      leading: const Icon(
-        Icons.task_alt,
-        color: Colors.green,
-      ),
-
-      title: Text(
-        habit.name,
-        style: const TextStyle(color: Colors.white),
-      ),
-
-      subtitle: Text(
-        "${habit.days} days",
-        style: const TextStyle(color: Colors.grey),
-      ),
-
-      trailing: GestureDetector(
-        onTap: () {
-          habit.completed = !habit.completed;
-          habit.save();
-        },
-        child: Icon(
-          Icons.check_circle,
-          color: habit.completed ? Colors.green : Colors.grey,
-        ),
-      ),
-    ),
-  ),
-);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      // bottomNavigationBar: const app_nav.CustomNavigationBar(
-      //   currentIndex:1,
-      // ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.green,
-        onPressed: addHabit,
-        child: const Icon(Icons.add),
       ),
     );
   }
 
   @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  void deleteSelectedHabits() {
-    final indexes = selectedHabits.toList()..sort((a, b) => b.compareTo(a));
-
-    for (var index in indexes) {
-      habitBox.deleteAt(index);
-    }
-
-    setState(() {
-      selectedHabits.clear();
-    });
-  }
-
-  void addHabit() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Add Habit"),
-          content: TextField(controller: controller),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                controller.clear();
-              },
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (controller.text.trim().isEmpty) {
-                  return;
-                }
-
-                habitBox.add(
-                  HabitModel(
-                    name: controller.text.trim(),
-                    days: 0,
-                    completed: false,
-                  ),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Daily Habits'),
+        actions: [
+          Consumer<HabitsProvider>(
+            builder: (context, habits, _) {
+              if (habits.hasSelection) {
+                return IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppColors.red),
+                  onPressed: () => habits.deleteSelectedHabits(),
+                  tooltip: 'Delete selected',
                 );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
+      body: Consumer<HabitsProvider>(
+        builder: (context, habits, _) {
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+            children: [
+              // Header
+              const Text('Daily Habits,', style: AppTextStyles.headline1),
+              const SizedBox(height: 4),
+              const Text('Stay disciplined. Stay ahead.',
+                  style: AppTextStyles.body),
+              const SizedBox(height: 20),
 
-                controller.clear();
-                Navigator.pop(context);
-              },
-              child: const Text("Add"),
-            ),
-          ],
-        );
-      },
+              // Stats row
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _HabitStatCard(
+                      label: 'Total Habits',
+                      value: '${habits.length}',
+                      icon: Icons.list_alt_rounded,
+                      color: AppColors.blue,
+                    ),
+                    const SizedBox(width: 12),
+                    _HabitStatCard(
+                      label: 'Completion',
+                      value:
+                          '${(habits.completionRate * 100).toStringAsFixed(0)}%',
+                      icon: Icons.check_circle_outline,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    _HabitStatCard(
+                      label: 'XP Earned',
+                      value: habits.totalXp >= 1000
+                          ? '${(habits.totalXp / 1000).toStringAsFixed(1)}K'
+                          : '${habits.totalXp}',
+                      icon: Icons.bolt,
+                      color: AppColors.amber,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // XP Progress Bar
+              XpProgressBar(
+                totalXp: habits.totalXp,
+                progress: habits.progress,
+                level: habits.level,
+                title: habits.title,
+                xpToNext: habits.xpToNext,
+              ),
+              const SizedBox(height: 16),
+
+              // Badges
+              if (habits.badges.isNotEmpty) ...[
+                const Text('Achievements', style: AppTextStyles.headline3),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children:
+                      habits.badges.map((b) => BadgeChip(badge: b)).toList(),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Habits list
+              const Text('Your Habits', style: AppTextStyles.headline3),
+              const SizedBox(height: 10),
+
+              if (habits.isEmpty)
+                const EmptyState(
+                  icon: Icons.check_circle_outline,
+                  title: 'No habits yet',
+                  subtitle: 'Tap + to add your first habit!',
+                )
+              else
+                ...List.generate(habits.length, (index) {
+                  final habit = habits.getHabit(index);
+                  final isSelected = habits.isHabitSelected(index);
+                  final isCoding = habits.isCodingHabit(habit.name);
+
+                  return GestureDetector(
+                    onLongPress: () => habits.toggleHabitSelection(index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primary.withValues(alpha: 0.15)
+                            : AppColors.cardBg,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.border,
+                          width: isSelected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Leading icon
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: habit.completed
+                                  ? AppColors.primary.withValues(alpha: 0.2)
+                                  : AppColors.surface,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              isCoding
+                                  ? Icons.code_rounded
+                                  : Icons.task_alt_rounded,
+                              color: habit.completed
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      habit.name,
+                                      style: TextStyle(
+                                        color: habit.completed
+                                            ? AppColors.textSecondary
+                                            : AppColors.textPrimary,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                        decoration: habit.completed
+                                            ? TextDecoration.lineThrough
+                                            : null,
+                                      ),
+                                    ),
+                                    if (isCoding) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.15),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                        ),
+                                        child: const Text(
+                                          '⚡ GitHub',
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              color: AppColors.primary),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${habit.days} day${habit.days != 1 ? 's' : ''} streak  •  +${XpCalculator.xpPerHabitCompletion} XP',
+                                  style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Complete toggle
+                          GestureDetector(
+                            onTap: () => habits.toggleHabitCompleted(index),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 200),
+                              child: Icon(
+                                habit.completed
+                                    ? Icons.check_circle_rounded
+                                    : Icons.circle_outlined,
+                                key: ValueKey(habit.completed),
+                                color: habit.completed
+                                    ? AppColors.primary
+                                    : AppColors.textMuted,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addHabit,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class _HabitStatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _HabitStatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 130,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 8),
+          Text(value,
+              style: TextStyle(
+                  color: color, fontSize: 22, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 2),
+          Text(label,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontSize: 11)),
+        ],
+      ),
     );
   }
 }

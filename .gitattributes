@@ -1,0 +1,33 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Explicitly declare text files
+*.dart text
+*.md text
+*.yaml text
+*.yml text
+*.json text
+*.xml text
+*.gradle text
+*.gradle.kts text
+*.properties text
+*.html text
+*.css text
+*.js text
+*.ts text
+*.swift text
+*.cc text
+*.cmake text
+*.pbxproj text
+*.storyboard text
+*.plist text
+
+# Declare binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.jar binary
+*.class binary
