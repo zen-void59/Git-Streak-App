@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: moss-oauth-proxy
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false

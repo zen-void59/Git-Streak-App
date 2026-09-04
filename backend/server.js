@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const fetch = require('node-fetch');
+const https = require('https');
 
 const app = express();
 app.use(cors());
@@ -15,6 +15,40 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok', service: 'Moss OAuth Proxy' });
 });
 
+// Helper function to POST to GitHub using built-in https module
+function postToGitHub(urlPath, body) {
+  return new Promise((resolve, reject) => {
+    const postData = JSON.stringify(body);
+
+    const options = {
+      hostname: 'github.com',
+      path: urlPath,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Content-Length': Buffer.byteLength(postData),
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(new Error('Failed to parse GitHub response'));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(postData);
+    req.end();
+  });
+}
+
 // Exchange authorization code for access token
 app.post('/exchange-code', async (req, res) => {
   const { code } = req.body;
@@ -24,24 +58,15 @@ app.post('/exchange-code', async (req, res) => {
   }
 
   if (!CLIENT_ID || !CLIENT_SECRET) {
-    return res.status(500).json({ error: 'Server configuration error' });
+    return res.status(500).json({ error: 'Server configuration error: Missing GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET' });
   }
 
   try {
-    const response = await fetch('https://github.com/login/oauth/access_token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        code: code,
-      }),
+    const data = await postToGitHub('/login/oauth/access_token', {
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      code: code,
     });
-
-    const data = await response.json();
 
     if (data.error) {
       return res.status(401).json({
@@ -49,7 +74,6 @@ app.post('/exchange-code', async (req, res) => {
       });
     }
 
-    // Return the access token
     res.json({
       access_token: data.access_token,
       token_type: data.token_type,
@@ -62,6 +86,6 @@ app.post('/exchange-code', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Moss OAuth Proxy running on port ${PORT}`);
 });
