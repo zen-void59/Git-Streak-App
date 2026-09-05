@@ -135,6 +135,7 @@ class DashboardProvider extends ChangeNotifier {
       await settings.put('cached_commits', stats.totalContributions);
       await settings.put('current_streak', stats.currentStreak);
       await settings.put('longest_streak', stats.longestStreak);
+      await settings.put('weekly_commits', stats.weeklyCommits);
 
       _user = user;
       _repos = repos;
@@ -169,9 +170,7 @@ class DashboardProvider extends ChangeNotifier {
 
   void _checkMilestones(ContributionStats stats) {
     // Check streak milestones
-    if (StreakRecovery.isEnabled()) {
-      _notificationService.showStreakMilestone(stats.currentStreak);
-    }
+    _notificationService.showStreakMilestone(stats.currentStreak);
 
     // Check commit milestones
     _notificationService.showCommitMilestone(stats.totalContributions);

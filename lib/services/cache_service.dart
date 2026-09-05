@@ -11,10 +11,19 @@ class CacheService {
   static const String _timestampSuffix = '_ts';
   static const int _ttlMinutes = 30;
 
+  static final CacheService _instance = CacheService._internal();
+  factory CacheService() => _instance;
+  CacheService._internal();
+
   late Box _box;
+  bool _initialized = false;
+
+  bool get isInitialized => _initialized;
 
   Future<void> init() async {
+    if (_initialized) return;
     _box = await Hive.openBox('cache');
+    _initialized = true;
   }
 
   bool _isExpired(String key) {
@@ -103,6 +112,8 @@ class CacheService {
   }
 
   void clearAll() {
-    _box.clear();
+    if (_initialized) {
+      _box.clear();
+    }
   }
 }

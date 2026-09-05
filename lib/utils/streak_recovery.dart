@@ -11,6 +11,10 @@ class StreakRecovery {
   static const String _recoveryEnabledKey = 'streak_recovery_enabled';
   static const String _lastRecoveryDateKey = 'last_recovery_date';
 
+  static bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
   /// Check if streak recovery is enabled
   static bool isEnabled() {
     final settings = Hive.box('settings');
@@ -32,10 +36,7 @@ class StreakRecovery {
     final lastDate = DateTime.tryParse(lastUsed);
     if (lastDate == null) return false;
 
-    final today = DateTime.now();
-    return lastDate.year == today.year &&
-        lastDate.month == today.month &&
-        lastDate.day == today.day;
+    return _isSameDay(lastDate, DateTime.now());
   }
 
   /// Check if user is eligible for recovery.
@@ -52,14 +53,9 @@ class StreakRecovery {
     if (currentStreak < 1) return false;
 
     final today = DateTime.now();
-    final todayStr = '${today.year}-${today.month}-${today.day}';
 
     // Check if today has contributions
-    final todayContributions = days.where((d) {
-      final dateStr =
-          '${d.date.year}-${d.date.month}-${d.date.day}';
-      return dateStr == todayStr;
-    });
+    final todayContributions = days.where((d) => _isSameDay(d.date, today));
 
     // If today has contributions, no need for recovery
     if (todayContributions.isNotEmpty &&
@@ -69,14 +65,8 @@ class StreakRecovery {
 
     // Check if yesterday has contributions
     final yesterday = today.subtract(const Duration(days: 1));
-    final yesterdayStr =
-        '${yesterday.year}-${yesterday.month}-${yesterday.day}';
-
-    final yesterdayContributions = days.where((d) {
-      final dateStr =
-          '${d.date.year}-${d.date.month}-${d.date.day}';
-      return dateStr == yesterdayStr;
-    });
+    final yesterdayContributions =
+        days.where((d) => _isSameDay(d.date, yesterday));
 
     // Must have contributions yesterday to be eligible
     return yesterdayContributions.isNotEmpty &&

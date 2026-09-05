@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:uni_links/uni_links.dart';
+import 'package:app_links/app_links.dart';
 
 import 'models/habit_model.dart';
 import 'providers/auth_provider.dart';
@@ -44,7 +44,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-  StreamSubscription? _sub;
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _sub;
 
   @override
   void initState() {
@@ -59,8 +60,9 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _initDeepLinks() {
-    // Handle deep links when app is running
-    _sub = uriLinkStream.listen((Uri? uri) {
+    _appLinks = AppLinks();
+
+    _sub = _appLinks.uriLinkStream.listen((Uri? uri) {
       if (uri != null) {
         _handleDeepLink(uri);
       }
@@ -68,24 +70,29 @@ class _MyAppState extends State<MyApp> {
       debugPrint('Deep link error: $err');
     });
 
-    // Handle deep link that opened the app
-    getInitialUri().then((Uri? uri) {
+    _appLinks.getInitialLink().then((Uri? uri) {
       if (uri != null) {
         _handleDeepLink(uri);
       }
     }).catchError((err) {
-      debugPrint('Initial URI error: $err');
+      debugPrint('Initial link error: $err');
     });
   }
 
   void _handleDeepLink(Uri uri) {
-    // Handle mossapp://callback?code=xxx
-    if (uri.scheme == 'mossapp' && uri.host == 'callback') {
-      final code = uri.queryParameters['code'];
-      if (code != null && code.isNotEmpty) {
-        // Complete the OAuth flow
-        final auth = context.read<AuthProvider>();
+    debugPrint('Deep link received: $uri');
+    debugPrint('Scheme: ${uri.scheme}, Host: ${uri.host}, Path: ${uri.path}');
+    debugPrint('Query params: ${uri.queryParameters}');
+
+    final code = uri.queryParameters['code'];
+    if (code != null && code.isNotEmpty) {
+      debugPrint('OAuth code found: ${code.substring(0, 8)}...');
+      final navContext = _navigatorKey.currentContext;
+      if (navContext != null) {
+        final auth = navContext.read<AuthProvider>();
         auth.completeLogin(code);
+      } else {
+        debugPrint('Navigator context is null - cannot complete login');
       }
     }
   }
@@ -105,7 +112,14 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
         navigatorKey: _navigatorKey,
-        home: const AuthGate(),
+        home: Consumer<AuthProvider>(
+          builder: (context, auth, _) {
+            if (auth.isAuthenticated) {
+              return const MainScreen();
+            }
+            return const LoginPage();
+          },
+        ),
         routes: {
           '/home': (_) => const MainScreen(),
           '/login': (_) => const LoginPage(),
@@ -113,33 +127,6 @@ class _MyAppState extends State<MyApp> {
           '/compare': (_) => const ComparePage(),
         },
       ),
-    );
-  }
-}
-
-/// Decides whether to show login or main screen based on auth state
-class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
-        if (auth.isLoading) {
-          return const Scaffold(
-            backgroundColor: AppColors.background,
-            body: Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-          );
-        }
-
-        if (auth.isAuthenticated) {
-          return const MainScreen();
-        }
-
-        return const LoginPage();
-      },
     );
   }
 }

@@ -9,16 +9,12 @@ class SettingsProvider extends ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
 
   String _username = '';
-  String _token = '';
   bool _isReminderOn = false;
   TimeOfDay? _selectedTime;
-  bool _obscureToken = true;
 
   String get username => _username;
-  String get token => _token;
   bool get isReminderOn => _isReminderOn;
   TimeOfDay? get selectedTime => _selectedTime;
-  bool get obscureToken => _obscureToken;
   bool get hasUsername => _username.isNotEmpty;
 
   String get displayUsername =>
@@ -32,7 +28,6 @@ class SettingsProvider extends ChangeNotifier {
   void _loadSettings() {
     _username =
         _settingsBox.get('github_username', defaultValue: '') as String;
-    _token = _settingsBox.get('github_token', defaultValue: '') as String;
     _isReminderOn =
         _settingsBox.get('reminder_enabled', defaultValue: false) as bool;
 
@@ -50,20 +45,24 @@ class SettingsProvider extends ChangeNotifier {
     await _settingsBox.put('github_username', _username);
 
     // Clear cache so next visit fetches fresh data
-    await _cache.init();
     _cache.clearAll();
 
     notifyListeners();
   }
 
-  Future<void> saveToken(String token) async {
-    _token = token.trim();
-    await _settingsBox.put('github_token', _token);
+  Future<void> clearCache() async {
+    _cache.clearAll();
     notifyListeners();
   }
 
-  void toggleObscureToken() {
-    _obscureToken = !_obscureToken;
+  Future<void> resetApp() async {
+    await _settingsBox.clear();
+    final habitBox = Hive.box('habits');
+    await habitBox.clear();
+    _cache.clearAll();
+    await _notificationService.cancelAll();
+
+    _loadSettings();
     notifyListeners();
   }
 
@@ -96,24 +95,6 @@ class SettingsProvider extends ChangeNotifier {
       );
     }
 
-    notifyListeners();
-  }
-
-  Future<void> clearCache() async {
-    await _cache.init();
-    _cache.clearAll();
-    notifyListeners();
-  }
-
-  Future<void> resetApp() async {
-    await _settingsBox.clear();
-    final habitBox = Hive.box('habits');
-    await habitBox.clear();
-    await _cache.init();
-    _cache.clearAll();
-    await _notificationService.cancelAll();
-
-    _loadSettings();
     notifyListeners();
   }
 }

@@ -27,6 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   GitHubUser? _user;
   List<GitHubRepo> _repos = [];
   bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -35,28 +36,52 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadData() async {
-    await _cache.init();
-    final box = Hive.box('settings');
-    final username = box.get('github_username', defaultValue: '') as String;
+    try {
+      await _cache.init();
+      final box = Hive.box('settings');
+      final username = box.get('github_username', defaultValue: '') as String;
 
-    var user = _cache.getCachedUser();
-    var repos = _cache.getCachedRepos();
+      // Ensure token is set for authenticated API calls
+      if (!mounted) return;
+      final dashboard = context.read<DashboardProvider>();
+      if (dashboard.user != null) {
+        // Reuse dashboard data if available
+        setState(() {
+          _user = dashboard.user;
+          _repos = dashboard.repos;
+          _loading = false;
+          _error = null;
+        });
+        return;
+      }
 
-    if (user == null) {
-      user = await _service.fetchUser(username);
-      if (user != null) await _cache.saveUser(user);
-    }
-    if (repos == null) {
-      repos = await _service.fetchRepositories(username, perPage: 30);
-      if (repos.isNotEmpty) await _cache.saveRepos(repos);
-    }
+      var user = _cache.getCachedUser();
+      var repos = _cache.getCachedRepos();
 
-    if (mounted) {
-      setState(() {
-        _user = user;
-        _repos = repos ?? [];
-        _loading = false;
-      });
+      if (user == null) {
+        user = await _service.fetchUser(username);
+        if (user != null) await _cache.saveUser(user);
+      }
+      if (repos == null) {
+        repos = await _service.fetchRepositories(username, perPage: 30);
+        if (repos.isNotEmpty) await _cache.saveRepos(repos);
+      }
+
+      if (mounted) {
+        setState(() {
+          _user = user;
+          _repos = repos ?? [];
+          _loading = false;
+          _error = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = 'Failed to load profile. Pull to refresh.';
+        });
+      }
     }
   }
 
@@ -105,36 +130,55 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: _loading
           ? const DashboardSkeleton()
-          : RefreshIndicator(
-              color: AppColors.primary,
-              onRefresh: () async {
-                _cache.clearAll();
-                setState(() => _loading = true);
-                await _loadData();
-              },
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _ProfileHeader(user: _user, onLaunch: _launchUrl),
-                    const SizedBox(height: 20),
-                    _StatsRow(user: _user),
-                    const SizedBox(height: 24),
-                    if (_topRepos.isNotEmpty) ...[
-                      const Text('Top Repositories',
-                          style: AppTextStyles.headline3),
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 48, color: AppColors.textMuted),
                       const SizedBox(height: 12),
-                      ..._topRepos.map((r) => RepoCard(
-                            repo: r,
-                            onTap: () => _launchUrl(r.htmlUrl),
-                          )),
+                      Text(_error!, style: const TextStyle(color: AppColors.textSecondary)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() { _loading = true; _error = null; });
+                          _loadData();
+                        },
+                        child: const Text('Retry'),
+                      ),
                     ],
-                  ],
+                  ),
+                )
+              : RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () async {
+                    _cache.clearAll();
+                    setState(() => _loading = true);
+                    await _loadData();
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _ProfileHeader(user: _user, onLaunch: _launchUrl),
+                        const SizedBox(height: 20),
+                        _StatsRow(user: _user),
+                        const SizedBox(height: 24),
+                        if (_topRepos.isNotEmpty) ...[
+                          const Text('Top Repositories',
+                              style: AppTextStyles.headline3),
+                          const SizedBox(height: 12),
+                          ..._topRepos.map((r) => RepoCard(
+                                repo: r,
+                                onTap: () => _launchUrl(r.htmlUrl),
+                              )),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
     );
   }
 }

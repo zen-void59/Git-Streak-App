@@ -2,6 +2,7 @@ services:
   - type: web
     name: moss-oauth-proxy
     runtime: node
+    rootDir: backend
     buildCommand: npm install
     startCommand: node server.js
     envVars:

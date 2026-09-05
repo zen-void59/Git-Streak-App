@@ -45,8 +45,8 @@ void main() {
           completedHabits: 5,
           currentStreak: 7,
         );
-        // 10*10 (commits) + 5*20 (habits) + 50 (streak bonus) = 250
-        expect(xp, 250);
+        // 100 (base) + 10*10 (commits) + 5*20 (habits) + 50 (streak bonus) = 350
+        expect(xp, 350);
       });
 
       test('adds weekly goal bonus when 7+ commits', () {
@@ -56,8 +56,8 @@ void main() {
           currentStreak: 0,
           weeklyCommits: 7,
         );
-        // 7*10 (commits) + 100 (weekly goal) = 170
-        expect(xp, 170);
+        // 100 (base) + 7*10 (commits) + 100 (weekly goal) = 270
+        expect(xp, 270);
       });
     });
 

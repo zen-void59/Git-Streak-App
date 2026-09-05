@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.Moss_app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -23,11 +23,25 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            val keyPropsFile = rootProject.file("key.properties")
+            if (keyPropsFile.exists()) {
+                val props = keyPropsFile.readLines().associate {
+                    val (k, v) = it.split("=", limit = 2)
+                    k.trim() to v.trim()
+                }
+                keyAlias = props["keyAlias"]
+                keyPassword = props["keyPassword"]
+                storeFile = props["storeFile"]?.let { f -> file(f) }
+                storePassword = props["storePassword"]
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

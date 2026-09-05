@@ -69,14 +69,12 @@ class AuthProvider extends ChangeNotifier {
 
   /// Start OAuth login flow
   Future<void> login() async {
-    _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
       await _authService.login();
-      // The actual token exchange happens when the deep link is received
-      // See main.dart for the callback handling
+      // User goes to browser now. Loading state is set when deep link arrives.
     } catch (e) {
       _status = AuthStatus.error;
       _errorMessage = 'Failed to start login: $e';
@@ -86,25 +84,29 @@ class AuthProvider extends ChangeNotifier {
 
   /// Complete the OAuth flow with the authorization code
   Future<void> completeLogin(String code) async {
+    debugPrint('completeLogin called with code: ${code.substring(0, 5)}...');
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final token = await _authService.handleCallback(code);
+      final result = await _authService.handleCallback(code);
 
-      if (token == null) {
+      if (!result.success) {
         _status = AuthStatus.error;
-        _errorMessage = 'Failed to authenticate with GitHub';
+        _errorMessage = result.errorMessage ?? 'Authentication failed. Please try again.';
+        debugPrint('Token exchange failed: $_errorMessage');
         notifyListeners();
         return;
       }
 
       // Set token for API calls
-      _githubService.setToken(token);
+      _githubService.setToken(result.token);
 
       // Fetch current user from GitHub
+      debugPrint('Fetching current user...');
       _user = await _fetchCurrentUser();
+      debugPrint('User fetched: ${_user?.login}');
 
       if (_user != null) {
         _username = _user!.login;
@@ -121,13 +123,16 @@ class AuthProvider extends ChangeNotifier {
         await settings.put('github_username', _user!.login);
 
         _status = AuthStatus.authenticated;
+        debugPrint('Login complete - authenticated');
       } else {
         _status = AuthStatus.error;
-        _errorMessage = 'Failed to fetch user data from GitHub';
+        _errorMessage = 'Authenticated but failed to load your GitHub profile. Please try again.';
+        debugPrint('Login failed - user is null');
       }
     } catch (e) {
       _status = AuthStatus.error;
-      _errorMessage = 'Login failed: $e';
+      _errorMessage = 'An unexpected error occurred: $e';
+      debugPrint('Login exception: $e');
     }
 
     notifyListeners();
@@ -177,6 +182,13 @@ class AuthProvider extends ChangeNotifier {
   /// Set token manually (for backward compatibility)
   void setToken(String token) {
     _githubService.setToken(token);
+    notifyListeners();
+  }
+
+  /// Clear error message
+  void clearError() {
+    _errorMessage = null;
+    _status = AuthStatus.initial;
     notifyListeners();
   }
 }

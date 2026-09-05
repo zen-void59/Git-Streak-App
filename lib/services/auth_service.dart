@@ -1,9 +1,20 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../config/oauth_config.dart';
+
+class TokenExchangeResult {
+  final String? token;
+  final String? errorMessage;
+  final bool isNetworkError;
+
+  TokenExchangeResult({this.token, this.errorMessage, this.isNetworkError = false});
+
+  bool get success => token != null && token!.isNotEmpty;
+}
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -15,6 +26,9 @@ class AuthService {
   static const String _tokenKey = 'github_access_token';
   static const String _usernameKey = 'github_username';
   static const String _avatarKey = 'github_avatar_url';
+  static const int _maxRetries = 3;
+  static const Duration _initialRetryDelay = Duration(seconds: 2);
+  static const Duration _requestTimeout = Duration(seconds: 30);
 
   /// Start the GitHub OAuth flow
   Future<void> login() async {
@@ -30,31 +44,107 @@ class AuthService {
     }
   }
 
-  /// Handle the OAuth callback with authorization code
-  Future<String?> handleCallback(String code) async {
-    try {
-      final response = await http.post(
-        Uri.parse(OAuthConfig.tokenExchangeUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'code': code}),
-      );
+  /// Handle the OAuth callback with authorization code.
+  /// Includes retry logic with exponential backoff for cold-start backends.
+  Future<TokenExchangeResult> handleCallback(String code) async {
+    for (int attempt = 0; attempt < _maxRetries; attempt++) {
+      try {
+        debugPrint('Token exchange attempt ${attempt + 1}/$_maxRetries');
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final accessToken = data['access_token'] as String?;
+        final response = await http.post(
+          Uri.parse(OAuthConfig.tokenExchangeUrl),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'code': code}),
+        ).timeout(_requestTimeout);
 
-        if (accessToken != null) {
-          await _storage.write(key: _tokenKey, value: accessToken);
-          return accessToken;
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final accessToken = data['access_token'] as String?;
+
+          if (accessToken != null && accessToken.isNotEmpty) {
+            await _storage.write(key: _tokenKey, value: accessToken);
+            debugPrint('Token exchange successful');
+            return TokenExchangeResult(token: accessToken);
+          }
+
+          // HTTP 200 but no access_token — backend returned an error in the body
+          final error = data['error'] as String? ?? 'Unknown error';
+          debugPrint('Token exchange: backend returned error: $error');
+          return TokenExchangeResult(
+            errorMessage: 'GitHub denied access: $error',
+          );
         }
-      }
 
-      debugPrint('Token exchange failed: ${response.body}');
-      return null;
-    } catch (e) {
-      debugPrint('Token exchange error: $e');
-      return null;
+        // Non-200 status — try to parse error message from backend
+        String serverError;
+        try {
+          final data = jsonDecode(response.body);
+          serverError = data['error'] as String? ?? 'Server error ${response.statusCode}';
+        } catch (_) {
+          serverError = 'Server error ${response.statusCode}';
+        }
+
+        debugPrint('Token exchange failed (${response.statusCode}): $serverError');
+
+        // Don't retry on client errors (4xx except 429)
+        if (response.statusCode >= 400 && response.statusCode < 500 && response.statusCode != 429) {
+          return TokenExchangeResult(errorMessage: serverError);
+        }
+
+        // Retry on 429 (rate limit) or 5xx (server error)
+        if (attempt < _maxRetries - 1) {
+          final delay = _initialRetryDelay * (1 << attempt);
+          debugPrint('Retrying in ${delay.inSeconds}s...');
+          await Future.delayed(delay);
+          continue;
+        }
+
+        return TokenExchangeResult(errorMessage: serverError);
+      } on TimeoutException {
+        debugPrint('Token exchange timeout on attempt ${attempt + 1}');
+        if (attempt < _maxRetries - 1) {
+          final delay = _initialRetryDelay * (1 << attempt);
+          debugPrint('Retrying in ${delay.inSeconds}s...');
+          await Future.delayed(delay);
+          continue;
+        }
+        return TokenExchangeResult(
+          errorMessage: 'Connection timed out. The server may be starting up, please try again in a moment.',
+          isNetworkError: true,
+        );
+      } on http.ClientException {
+        debugPrint('Token exchange network error on attempt ${attempt + 1}');
+        if (attempt < _maxRetries - 1) {
+          final delay = _initialRetryDelay * (1 << attempt);
+          debugPrint('Retrying in ${delay.inSeconds}s...');
+          await Future.delayed(delay);
+          continue;
+        }
+        return TokenExchangeResult(
+          errorMessage: 'No internet connection. Please check your network and try again.',
+          isNetworkError: true,
+        );
+      } on FormatException {
+        debugPrint('Token exchange: invalid response format');
+        return TokenExchangeResult(
+          errorMessage: 'Received an invalid response from the server.',
+        );
+      } catch (e) {
+        debugPrint('Token exchange unexpected error: $e');
+        if (attempt < _maxRetries - 1) {
+          final delay = _initialRetryDelay * (1 << attempt);
+          await Future.delayed(delay);
+          continue;
+        }
+        return TokenExchangeResult(
+          errorMessage: 'Authentication failed: $e',
+        );
+      }
     }
+
+    return TokenExchangeResult(
+      errorMessage: 'Authentication failed after $_maxRetries attempts. Please try again.',
+    );
   }
 
   /// Get the stored access token

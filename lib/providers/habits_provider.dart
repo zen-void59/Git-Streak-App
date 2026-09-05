@@ -22,14 +22,14 @@ class HabitsProvider extends ChangeNotifier {
   }
 
   int get totalXp {
-    final totalCommits =
-        _settingsBox.get('cached_commits', defaultValue: 0) as int;
     final currentStreak =
         _settingsBox.get('current_streak', defaultValue: 0) as int;
+    final weeklyCommits =
+        _settingsBox.get('weekly_commits', defaultValue: 0) as int;
     return XpCalculator.totalXp(
-      totalCommits: totalCommits,
       completedHabits: completedCount,
       currentStreak: currentStreak,
+      weeklyCommits: weeklyCommits,
     );
   }
 
@@ -61,10 +61,10 @@ class HabitsProvider extends ChangeNotifier {
     if (_habitBox.isEmpty) {
       _habitBox
           .add(HabitModel(name: 'Daily Coding', days: 0, completed: false));
-      _habitBox.add(
-          HabitModel(name: 'Read 20 min', days: 14, completed: false));
       _habitBox
-          .add(HabitModel(name: 'Workout', days: 42, completed: false));
+          .add(HabitModel(name: 'Read 20 min', days: 0, completed: false));
+      _habitBox
+          .add(HabitModel(name: 'Workout', days: 0, completed: false));
     }
   }
 
@@ -96,20 +96,32 @@ class HabitsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addHabit(String name) {
-    if (name.trim().isEmpty) return;
+  bool addHabit(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return false;
+    if (trimmed.length > 50) return false;
     _habitBox.add(HabitModel(
-      name: name.trim(),
+      name: trimmed,
       days: 0,
       completed: false,
     ));
     notifyListeners();
+    return true;
   }
 
   void toggleHabitCompleted(int index) {
     final habit = _habitBox.getAt(index)!;
-    habit.completed = !habit.completed;
-    if (habit.completed) habit.days++;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+
+    if (habit.completed) {
+      habit.completed = false;
+    } else {
+      habit.completed = true;
+      if (habit.lastCompletedDate != today) {
+        habit.days++;
+        habit.lastCompletedDate = today;
+      }
+    }
     habit.save();
     notifyListeners();
   }

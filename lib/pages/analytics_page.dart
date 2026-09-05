@@ -1,10 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:provider/provider.dart';
 import '../models/contribution_day.dart';
 import '../models/github_repo.dart';
 import '../services/github_service.dart';
 import '../services/cache_service.dart';
+import '../providers/dashboard_provider.dart';
 import '../utils/constants.dart';
 import '../utils/streak_calculator.dart';
 
@@ -23,6 +25,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
   List<ContributionDay> _days = [];
   List<GitHubRepo> _repos = [];
   bool _loading = true;
+  String? _error;
   late TabController _tabController;
 
   @override
@@ -39,28 +42,51 @@ class _AnalyticsPageState extends State<AnalyticsPage>
   }
 
   Future<void> _loadData() async {
-    await _cache.init();
-    final box = Hive.box('settings');
-    final username = box.get('github_username', defaultValue: '') as String;
+    try {
+      await _cache.init();
 
-    var days = _cache.getCachedContributions();
-    var repos = _cache.getCachedRepos();
+      if (!mounted) return;
+      final dashboard = context.read<DashboardProvider>();
+      if (dashboard.contributions.isNotEmpty) {
+        setState(() {
+          _days = dashboard.contributions;
+          _repos = dashboard.repos;
+          _loading = false;
+          _error = null;
+        });
+        return;
+      }
 
-    if (days == null) {
-      days = await _service.fetchContributions(username);
-      if (days.isNotEmpty) await _cache.saveContributions(days);
-    }
-    if (repos == null) {
-      repos = await _service.fetchRepositories(username, perPage: 30);
-      if (repos.isNotEmpty) await _cache.saveRepos(repos);
-    }
+      final box = Hive.box('settings');
+      final username = box.get('github_username', defaultValue: '') as String;
 
-    if (mounted) {
-      setState(() {
-        _days = days ?? [];
-        _repos = repos ?? [];
-        _loading = false;
-      });
+      var days = _cache.getCachedContributions();
+      var repos = _cache.getCachedRepos();
+
+      if (days == null) {
+        days = await _service.fetchContributions(username);
+        if (days.isNotEmpty) await _cache.saveContributions(days);
+      }
+      if (repos == null) {
+        repos = await _service.fetchRepositories(username, perPage: 30);
+        if (repos.isNotEmpty) await _cache.saveRepos(repos);
+      }
+
+      if (mounted) {
+        setState(() {
+          _days = days ?? [];
+          _repos = repos ?? [];
+          _loading = false;
+          _error = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = 'Failed to load analytics data. Pull to refresh.';
+        });
+      }
     }
   }
 
@@ -147,14 +173,33 @@ class _AnalyticsPageState extends State<AnalyticsPage>
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _WeeklyTab(groups: _buildWeeklyBars()),
-                _DailyTab(spots: _buildDailySpots(), days: _days),
-                _LanguagesTab(map: _languageMap(), colors: _pieColors),
-              ],
-            ),
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 48, color: AppColors.textMuted),
+                      const SizedBox(height: 12),
+                      Text(_error!, style: const TextStyle(color: AppColors.textSecondary)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() { _loading = true; _error = null; });
+                          _loadData();
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _WeeklyTab(groups: _buildWeeklyBars()),
+                    _DailyTab(spots: _buildDailySpots(), days: _days),
+                    _LanguagesTab(map: _languageMap(), colors: _pieColors),
+                  ],
+                ),
     );
   }
 }

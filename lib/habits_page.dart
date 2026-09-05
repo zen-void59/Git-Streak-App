@@ -163,9 +163,13 @@ class _HabitsPageState extends State<HabitsPage> {
                   final habit = habits.getHabit(index);
                   final isSelected = habits.isHabitSelected(index);
                   final isCoding = habits.isCodingHabit(habit.name);
+                  final hasSelection = habits.hasSelection;
 
                   return GestureDetector(
                     onLongPress: () => habits.toggleHabitSelection(index),
+                    onTap: hasSelection
+                        ? () => habits.toggleHabitSelection(index)
+                        : null,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.only(bottom: 10),
@@ -258,7 +262,10 @@ class _HabitsPageState extends State<HabitsPage> {
                           ),
                           // Complete toggle
                           GestureDetector(
-                            onTap: () => habits.toggleHabitCompleted(index),
+                            behavior: HitTestBehavior.opaque,
+                            onTap: hasSelection
+                                ? null
+                                : () => habits.toggleHabitCompleted(index),
                             child: AnimatedSwitcher(
                               duration: const Duration(milliseconds: 200),
                               child: Icon(

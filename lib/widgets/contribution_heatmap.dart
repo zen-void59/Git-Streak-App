@@ -17,24 +17,34 @@ class _ContributionHeatmapState extends State<ContributionHeatmap>
   ContributionDay? _hoveredDay;
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
+  late ScrollController _scrollController;
 
-  static const double _cellSize = 11;
+  static const double _cellSize = 13;
   static const double _cellGap = 2.5;
   static const int _weeks = 53;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     _fadeCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeIn);
+
+    // Auto-scroll to the right (latest weeks) after first build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
   }
 
   @override
   void dispose() {
     _fadeCtrl.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -102,6 +112,7 @@ class _ContributionHeatmapState extends State<ContributionHeatmap>
         children: [
           // Month labels row
           SingleChildScrollView(
+            controller: _scrollController,
             scrollDirection: Axis.horizontal,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/constants.dart';
-import '../main_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -44,35 +43,23 @@ class _LoginPageState extends State<LoginPage>
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Consumer<AuthProvider>(
                 builder: (context, auth, _) {
-                  // Auto-navigate if already authenticated
                   if (auth.isAuthenticated) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => const MainScreen()),
-                      );
+                      if (mounted) {
+                        Navigator.of(context).pushReplacementNamed('/home');
+                      }
                     });
                   }
-
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Logo
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.local_fire_department,
-                          color: Colors.black,
-                          size: 48,
-                        ),
+                      const Icon(
+                        Icons.local_fire_department,
+                        color: Color.fromARGB(255, 57, 211, 83),
+                        size: 72,
                       ),
                       const SizedBox(height: 20),
 
-                      // Title
                       const Text(
                         'Moss',
                         style: TextStyle(
@@ -92,40 +79,34 @@ class _LoginPageState extends State<LoginPage>
                       ),
                       const SizedBox(height: 48),
 
-                      // GitHub OAuth Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton.icon(
-                          onPressed: auth.isLoading
-                              ? null
-                              : () => auth.login(),
-                          icon: auth.isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.black,
-                                  ),
-                                )
-                              : const Icon(Icons.login, size: 20),
-                          label: Text(
-                            auth.isLoading
-                                ? 'Connecting...'
-                                : 'Sign in with GitHub',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                      if (auth.isLoading) ...[
+                        const CircularProgressIndicator(color: AppColors.primary),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Connecting to GitHub...',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ] else ...[
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton.icon(
+                            onPressed: () => auth.login(),
+                            icon: const Icon(Icons.login, size: 20),
+                            label: const Text(
+                              'Sign in with GitHub',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.textPrimary,
+                              foregroundColor: Colors.black,
                             ),
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.textPrimary,
-                            foregroundColor: Colors.black,
-                            disabledBackgroundColor: AppColors.textMuted,
-                          ),
                         ),
-                      ),
+                      ],
 
                       if (auth.errorMessage != null) ...[
                         const SizedBox(height: 16),
@@ -152,11 +133,16 @@ class _LoginPageState extends State<LoginPage>
                             ],
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => auth.clearError(),
+                          child: const Text('Try Again',
+                              style: TextStyle(color: AppColors.primary)),
+                        ),
                       ],
 
                       const SizedBox(height: 24),
 
-                      // Info text
                       const Text(
                         'We only read your profile and repositories.\nYour data stays on your device.',
                         textAlign: TextAlign.center,

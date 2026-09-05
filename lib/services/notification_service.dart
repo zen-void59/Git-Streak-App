@@ -30,6 +30,9 @@ class NotificationService {
     // Initialize timezone for scheduling
     tz.initializeTimeZones();
 
+    // Request notification permission on Android 13+
+    await _requestPermission();
+
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
@@ -362,5 +365,32 @@ class NotificationService {
   Future<void> cancelDailyReminder() async {
     if (kIsWeb) return;
     await _plugin.cancel(_dailyReminderId);
+  }
+
+  /// Request notification permission (Android 13+ / iOS)
+  Future<void> _requestPermission() async {
+    try {
+      // Android 13+ requires runtime permission for notifications
+      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        final granted = await androidPlugin.requestNotificationsPermission();
+        debugPrint('Notification permission granted: $granted');
+      }
+
+      // iOS permission request
+      final iosPlugin = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      if (iosPlugin != null) {
+        final granted = await iosPlugin.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        debugPrint('iOS notification permission: $granted');
+      }
+    } catch (e) {
+      debugPrint('Permission request error: $e');
+    }
   }
 }

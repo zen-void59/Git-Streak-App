@@ -46,10 +46,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   Container(
                     width: 44,
                     height: 44,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                     child: const Icon(Icons.person, color: AppColors.primary),
                   ),
                   const SizedBox(width: 12),
@@ -214,7 +214,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.local_fire_department,
-                            color: Colors.black),
+                            color: Color.fromARGB(255, 57, 211, 83)),
                       ),
                       const SizedBox(width: 12),
                       const Column(
@@ -416,7 +416,7 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: AppColors.surface,
         title: const Text('Switch Account'),
         content: const Text(
-          'This will sign you out and return to the login screen. Your habits and local data will be cleared.',
+          'This will sign you out and restart the app to switch to a different account.',
         ),
         actions: [
           TextButton(
@@ -439,7 +439,7 @@ class _SettingsPageState extends State<SettingsPage> {
       await context.read<AuthProvider>().logout();
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginPage()),
-        (_) => false,
+        (route) => false,
       );
     }
   }

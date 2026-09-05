@@ -14,11 +14,15 @@ class HabitModel extends HiveObject {
   @HiveField(2)
   bool completed;
 
+  @HiveField(3)
+  String? lastCompletedDate;
+
 
   HabitModel({
     required this.name,
     required this.days,
     required this.completed,
+    this.lastCompletedDate,
   });
 
 }

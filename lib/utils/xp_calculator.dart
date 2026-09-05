@@ -45,12 +45,12 @@ class XpCalculator {
   }
 
   static int totalXp({
-    required int totalCommits,
+    int totalCommits = 0,
     required int completedHabits,
     required int currentStreak,
     int weeklyCommits = 0,
   }) {
-    int xp = computeXpFromCommits(totalCommits) +
+    int xp = 100 + computeXpFromCommits(totalCommits) +
         computeXpFromHabits(completedHabits) +
         streakBonusXp(currentStreak);
     if (weeklyCommits >= 7) xp += xpWeeklyGoal;

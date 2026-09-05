@@ -9,6 +9,10 @@ class GitHubService {
   static const String _baseUrl = 'https://api.github.com';
   static const String _graphqlUrl = 'https://api.github.com/graphql';
 
+  static final GitHubService _instance = GitHubService._internal();
+  factory GitHubService() => _instance;
+  GitHubService._internal();
+
   final ApiClient _client = ApiClient();
 
   void setToken(String? token) {
@@ -48,8 +52,6 @@ class GitHubService {
     int page = 1,
   }) async {
     try {
-      // Use /user/repos for authenticated user (includes private repos)
-      // Use /users/{username}/repos for other users (public only)
       final url = Uri.parse(
         '$_baseUrl/users/$username/repos?sort=updated&per_page=$perPage&page=$page',
       );
@@ -83,11 +85,14 @@ class GitHubService {
   /// Fetch contributions using GitHub GraphQL API (includes private contributions)
   Future<List<ContributionDay>> fetchContributions(String username) async {
     try {
-      // Use GraphQL API to get contributions including private repos
+      // Date range for last year
+      final now = DateTime.now();
+      final from = now.subtract(const Duration(days: 365));
+
       final query = '''
-        query(\$login: String!) {
+        query(\$login: String!, \$from: DateTime!, \$to: DateTime!) {
           user(login: \$login) {
-            contributionsCollection {
+            contributionsCollection(from: \$from, to: \$to) {
               contributionCalendar {
                 weeks {
                   contributionDays {
@@ -108,13 +113,24 @@ class GitHubService {
         },
         body: jsonEncode({
           'query': query,
-          'variables': {'login': username},
+          'variables': {
+            'login': username,
+            'from': from.toUtc().toIso8601String(),
+            'to': now.toUtc().toIso8601String(),
+          },
         }),
       );
 
       final json = jsonDecode(response.body);
+
+      // Check for GraphQL errors
+      if (json['errors'] != null) {
+        debugPrint('GraphQL errors: ${json['errors']}');
+        return _fetchContributionsFallback(username);
+      }
+
       final user = json['data']?['user'];
-      if (user == null) return [];
+      if (user == null) return _fetchContributionsFallback(username);
 
       final weeks = user['contributionsCollection']?['contributionCalendar']?['weeks'] as List?;
       if (weeks == null) return [];

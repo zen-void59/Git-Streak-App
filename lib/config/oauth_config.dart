@@ -1,11 +1,17 @@
 class OAuthConfig {
   // GitHub OAuth App Client ID
-  // Get this from: https://github.com/settings/developers → OAuth Apps
-  static const String clientId = 'Ov23li...'; // REPLACE WITH YOUR CLIENT ID
+  // Get this from: https://github.com/settings/developers -> OAuth Apps
+  static const String clientId = String.fromEnvironment(
+    'GITHUB_CLIENT_ID',
+    defaultValue: 'Ov23liqqDzllfnMZxoTo',
+  );
 
   // Backend proxy URL for token exchange
   // Deploy the backend/ folder and update this URL
-  static const String tokenExchangeUrl = 'https://your-proxy-url.onrender.com/exchange-code';
+  static const String tokenExchangeUrl = String.fromEnvironment(
+    'TOKEN_EXCHANGE_URL',
+    defaultValue: 'https://moss-1631.onrender.com/exchange-code',
+  );
 
   // OAuth scopes
   // read:user - Read user profile
