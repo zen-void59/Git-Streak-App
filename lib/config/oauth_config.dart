@@ -3,14 +3,14 @@ class OAuthConfig {
   // Get this from: https://github.com/settings/developers -> OAuth Apps
   static const String clientId = String.fromEnvironment(
     'GITHUB_CLIENT_ID',
-    defaultValue: 'Ov23liqqDzllfnMZxoTo',
+    defaultValue: '123456789',//private key
   );
 
   // Backend proxy URL for token exchange
   // Deploy the backend/ folder and update this URL
   static const String tokenExchangeUrl = String.fromEnvironment(
     'TOKEN_EXCHANGE_URL',
-    defaultValue: 'https://moss-1631.onrender.com/exchange-code',
+    defaultValue: '123456789',//private key
   );
 
   // OAuth scopes
