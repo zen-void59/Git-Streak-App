@@ -20,7 +20,7 @@ This server handles the GitHub OAuth token exchange. The `client_secret` stays o
 
 4. Edit `.env` and add your credentials:
    ```
-   GITHUB_CLIENT_ID=Ov23li...
+   GITHUB_CLIENT_ID=123456...//private key
    GITHUB_CLIENT_SECRET=...
    ```
 
